@@ -2,11 +2,6 @@ import EventEmitter from 'events';
 import { finished, pipeline } from 'readable-stream';
 import browser from 'webextension-polyfill';
 import {
-  CARDANO_PREVIEW_LIFECYCLE_EVENTS,
-  CARDANO_PREVIEW_SNAP_ID,
-  createCardanoPreviewDiscovery,
-} from './cardano-preview-discovery';
-import {
   createAsyncMiddleware,
   createScaffoldMiddleware,
   JsonRpcEngine,
@@ -191,6 +186,11 @@ import {
 } from '../../shared/lib/selectors/assets-migration';
 import { isPerpsRemoteConfigSatisfied } from '../../shared/lib/perps-feature-flags';
 import { getRemoteFeatureFlags } from '../../shared/lib/selectors/remote-feature-flags';
+import {
+  CARDANO_PREVIEW_LIFECYCLE_EVENTS,
+  CARDANO_PREVIEW_SNAP_ID,
+  createCardanoPreviewDiscovery,
+} from './cardano-preview-discovery';
 import { accountSupports7702 } from './lib/account-supports-7702';
 import { keyringSnapPermissionsBuilder } from './lib/snap-keyring/keyring-snaps-permissions';
 
@@ -4280,8 +4280,8 @@ export default class MetamaskController extends EventEmitter {
 
     if (this.syncCardanoPreviewDiscovery) {
       engine.push(
-        createAsyncMiddleware(async (req, res, next) => {
-          await next();
+        createAsyncMiddleware(async (req, res, runDownstream) => {
+          await runDownstream();
           if (
             req.method === 'wallet_requestSnaps' &&
             Object.hasOwn(res.result ?? {}, CARDANO_PREVIEW_SNAP_ID)
