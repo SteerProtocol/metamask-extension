@@ -1,3 +1,4 @@
+import { it as jestIt } from '@jest/globals';
 import { Variables } from '../lib/variables';
 import { ENVIRONMENT } from './constants';
 import { setEnvironmentVariables } from './set-environment-variables';
@@ -12,6 +13,7 @@ const SET_ENVIRONMENT_VARIABLES_DECLARED_VARIABLES = [
   'METAMASK_DEBUG',
   'SENTRY_DISTRIBUTED_TRACING_DISABLED',
   'METAMASK_BUILD_NAME',
+  'METAMASK_CARDANO_SNAP_ID',
   'METAMASK_BUILD_APP_ID',
   'METAMASK_BUILD_ICON',
   'METAMASK_ENVIRONMENT',
@@ -67,6 +69,30 @@ function getVariablesForSetEnvironmentVariables() {
 }
 
 describe('setEnvironmentVariables', () => {
+  jestIt.each([
+    ['flask', 'local:http://localhost:8080', 'local:http://localhost:8080'],
+    ['main', 'local:http://localhost:8080', null],
+    ['main', 'npm:@test/cardano-wallet', 'npm:@test/cardano-wallet'],
+    ['main', 'invalid-snap-id', null],
+  ])(
+    'validates Cardano Snap configuration for %s builds (%s)',
+    (buildType, snapId, expected) => {
+      const variables = getVariablesForSetEnvironmentVariables();
+      variables.set('METAMASK_CARDANO_SNAP_ID', snapId);
+      setEnvironmentVariables({
+        buildName: 'MetaMask',
+        isDevBuild: true,
+        isTestBuild: false,
+        buildType,
+        environment: ENVIRONMENT.DEVELOPMENT,
+        variables,
+        version: '1.0.0',
+      });
+
+      expect(variables.get('METAMASK_CARDANO_SNAP_ID')).toBe(expected);
+    },
+  );
+
   it('does not inject OAuth client ID env vars', () => {
     const variables = getVariablesForSetEnvironmentVariables();
 

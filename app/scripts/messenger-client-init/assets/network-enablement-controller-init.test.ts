@@ -7,7 +7,12 @@ import {
   NetworkEnablementController,
   NetworkEnablementControllerMessenger,
 } from '@metamask/network-enablement-controller';
-import { BtcScope, SolAccountType, SolScope } from '@metamask/keyring-api';
+import {
+  BtcScope,
+  CardanoScope,
+  SolAccountType,
+  SolScope,
+} from '@metamask/keyring-api';
 import { AccountsControllerSelectedAccountChangeEvent } from '@metamask/accounts-controller';
 import {
   AccountTreeControllerGetAccountsFromSelectedAccountGroupAction,
@@ -49,6 +54,7 @@ function getInitRequestMock(
           multichainNetworkConfigurationsByChainId: {
             [SolScope.Mainnet]: {},
             [BtcScope.Mainnet]: {},
+            [CardanoScope.Preview]: {},
           },
         },
       };
@@ -84,6 +90,28 @@ describe('NetworkEnablementControllerInit', () => {
     const { messengerClient } =
       NetworkEnablementControllerInit(getInitRequestMock());
     expect(messengerClient).toBeInstanceOf(NetworkEnablementController);
+  });
+
+  it('adds newly configured namespaces without changing saved network selections', () => {
+    const request = getInitRequestMock();
+    const evmNetworks = { [CHAIN_IDS.MAINNET]: true };
+    request.persistedState.NetworkEnablementController = {
+      enabledNetworkMap: { eip155: evmNetworks },
+      nativeAssetIdentifiers: {},
+    };
+
+    NetworkEnablementControllerInit(request);
+
+    expect(NetworkEnablementController).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        state: expect.objectContaining({
+          enabledNetworkMap: expect.objectContaining({
+            eip155: evmNetworks,
+            cip34: { [CardanoScope.Preview]: false },
+          }),
+        }),
+      }),
+    );
   });
 
   it('enables the Solana network when `AccountsController:selectedAccountChange` is emitted', () => {
@@ -278,6 +306,7 @@ describe('NetworkEnablementControllerInit', () => {
             [KnownCaipNamespace.Bip122]: {
               [BtcScope.Mainnet]: false,
             },
+            cip34: { [CardanoScope.Preview]: false },
           },
           nativeAssetIdentifiers: {},
         },
@@ -309,6 +338,7 @@ describe('NetworkEnablementControllerInit', () => {
           [KnownCaipNamespace.Bip122]: {
             [BtcScope.Mainnet]: false,
           },
+          cip34: { [CardanoScope.Preview]: false },
         },
         nativeAssetIdentifiers: {},
       },

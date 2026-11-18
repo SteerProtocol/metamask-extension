@@ -1,4 +1,5 @@
 import {
+  detectSnapLocation,
   SnapController,
   SnapControllerMessenger,
 } from '@metamask/snaps-controllers';
@@ -58,6 +59,7 @@ describe('SnapControllerInit', () => {
     const controllerMock = jest.mocked(SnapController);
     expect(controllerMock).toHaveBeenCalledWith({
       messenger: expect.any(Object),
+      detectSnapLocation: expect.any(Function),
       maxIdleTime: inMilliseconds(2, Duration.Minute),
       state: undefined,
       encryptor: expect.any(Object),
@@ -79,6 +81,38 @@ describe('SnapControllerInit', () => {
       preinstalledSnaps: expect.any(Array),
       ensureOnboardingComplete: expect.any(Function),
     });
+  });
+
+  it('uses the update flow for an exact local version and preserves normal location handling otherwise', async () => {
+    SnapControllerInit(getInitRequestMock());
+    const [options] = jest.mocked(SnapController).mock.lastCall ?? [];
+    const detect = options?.detectSnapLocation;
+    const localLocation = {
+      shouldAlwaysReload: true,
+      manifest: jest.fn(),
+      fetch: jest.fn(),
+    };
+    const npmLocation = { manifest: jest.fn(), fetch: jest.fn() };
+    jest
+      .mocked(detectSnapLocation)
+      .mockReturnValueOnce(localLocation)
+      .mockReturnValueOnce(localLocation)
+      .mockReturnValueOnce(npmLocation);
+
+    const versioned = detect?.('local:http://localhost:8080', {
+      allowLocal: true,
+      versionRange: '0.1.1',
+    });
+    expect(versioned?.shouldAlwaysReload).toBeFalsy();
+    await versioned?.manifest();
+    await versioned?.fetch('dist/bundle.js');
+    expect(localLocation.manifest.mock.contexts).toStrictEqual([localLocation]);
+    expect(localLocation.fetch.mock.contexts).toStrictEqual([localLocation]);
+    expect(localLocation.fetch).toHaveBeenCalledWith('dist/bundle.js');
+    expect(detect?.('local:http://localhost:8080')).toBe(localLocation);
+    expect(detect?.('npm:example-snap', { versionRange: '0.1.1' })).toBe(
+      npmLocation,
+    );
   });
 
   it('calls `SnapController:setClientActive` when the client is locked', () => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { CardanoScope } from '@metamask/keyring-api';
 import { Provider } from 'react-redux';
 import configureStore from 'redux-mock-store';
 import { CopyParams } from '../multichain-address-row/multichain-address-row';
@@ -383,6 +384,49 @@ describe('MultichainAggregatedAddressListRow', () => {
   });
 
   describe('Group Name Derivation', () => {
+    it('labels the Cardano Preview address', () => {
+      const state = createMockState();
+      const address =
+        'addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae';
+      const snapId = 'local:http://localhost:8080';
+      const previewStore = mockStore({
+        metamask: {
+          ...state.metamask,
+          multichainNetworkConfigurationsByChainId: {
+            ...state.metamask.multichainNetworkConfigurationsByChainId,
+            [CardanoScope.Preview]: {
+              name: 'Cardano Preview',
+              chainId: CardanoScope.Preview,
+              nativeCurrency: `${CardanoScope.Preview}/slip44:1815`,
+              isEvm: false,
+            },
+          },
+          internalAccounts: {
+            accounts: {
+              ...state.metamask.internalAccounts.accounts,
+              'cardano-account': {
+                address,
+                scopes: [CardanoScope.Preview],
+                metadata: { snap: { id: snapId } },
+              },
+            },
+          },
+          snaps: { ...state.metamask.snaps, [snapId]: { enabled: true } },
+        },
+      });
+
+      render(
+        <Provider store={previewStore}>
+          <MultichainAggregatedAddressListRow
+            {...createTestProps({ chainIds: [CardanoScope.Preview], address })}
+          />
+        </Provider>,
+      );
+
+      expect(screen.getByText('Cardano Preview')).toBeInTheDocument();
+      expect(screen.getByText('addr_...8faae')).toBeInTheDocument();
+    });
+
     it('displays "Ethereum" for EVM chain IDs', () => {
       const props = createTestProps({
         chainIds: ['eip155:1', 'eip155:137'],

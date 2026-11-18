@@ -87,6 +87,30 @@ describe('useConvertToFiat', () => {
     ).toBe(0.75);
   });
 
+  it('respects the testnet fiat preference for Cardano Preview activity', () => {
+    const chainId = 'cip34:0-2';
+    const assetId = `${chainId}/slip44:1815` as const;
+    const { result } = renderHookWithState(
+      {
+        metamask: {
+          assetsPrice: { [assetId]: { assetPriceType: 'fungible', price: 1 } },
+          conversionRates: {},
+          currencyRates: {},
+        },
+      },
+      chainId,
+    );
+
+    expect(
+      result.current({
+        amount: '2',
+        symbol: 'tADA',
+        assetId,
+        direction: 'out',
+      }),
+    ).toBeUndefined();
+  });
+
   it('skips zero assetsPrice and falls through for EVM tokens', () => {
     const { result } = renderHookWithState({
       metamask: {

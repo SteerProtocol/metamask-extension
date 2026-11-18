@@ -1219,6 +1219,12 @@
   "addBlockExplorerUrl": {
     "message": "Add a block explorer URL"
   },
+  "addCardanoPreviewAccount": {
+    "message": "Add Cardano Preview to MetaMask"
+  },
+  "addCardanoPreviewAccountFailed": {
+    "message": "Cardano Preview was not added. You can try again."
+  },
   "addContact": {
     "message": "Add contact"
   },
@@ -2683,6 +2689,10 @@
   },
   "cancelled": {
     "message": "Cancelled"
+  },
+  "cardanoDerivationPath": {
+    "message": "Cardano $1 ($2)",
+    "description": "$1 is the complete derivation path. $2 is the signing curve."
   },
   "carouselAllCaughtUp": {
     "message": "You're all caught up!",
@@ -6731,6 +6741,9 @@
   "networkNameBitcoin": {
     "message": "Bitcoin"
   },
+  "networkNameCardanoPreview": {
+    "message": "Cardano Preview"
+  },
   "networkNameDefinition": {
     "message": "The name associated with this network."
   },
@@ -7783,14 +7796,6 @@
     "message": "Let $1 display a custom home screen in MetaMask. This can be used for user interfaces, configuration, and dashboards.",
     "description": "An extended description for the `endowment:page-home` permission. $1 is the snap name."
   },
-  "permission_keyring": {
-    "message": "Allow requests for adding and controlling Ethereum accounts",
-    "description": "The description for the `endowment:keyring` permission"
-  },
-  "permission_keyringDescription": {
-    "message": "Let $1 receive requests to add or remove accounts, plus sign and transact on behalf of these accounts.",
-    "description": "An extended description for the `endowment:keyring` permission. $1 is the snap name."
-  },
   "permission_lifecycleHooks": {
     "message": "Use lifecycle hooks.",
     "description": "The description for the `endowment:lifecycle-hooks` permission"
@@ -7798,14 +7803,6 @@
   "permission_lifecycleHooksDescription": {
     "message": "Allow $1 to use lifecycle hooks to run code at specific times during its lifecycle.",
     "description": "An extended description for the `endowment:lifecycle-hooks` permission. $1 is the snap name."
-  },
-  "permission_manageAccounts": {
-    "message": "Add and control Ethereum accounts",
-    "description": "The description for `snap_manageAccounts` permission"
-  },
-  "permission_manageAccountsDescription": {
-    "message": "Allow $1 to add or remove Ethereum accounts, then transact and sign with these accounts.",
-    "description": "An extended description for the `snap_manageAccounts` permission. $1 is the snap name."
   },
   "permission_manageBip32Keys": {
     "message": "Manage $1 accounts.",
@@ -7818,6 +7815,14 @@
   "permission_manageBip44Keys": {
     "message": "Manage $1 accounts.",
     "description": "The description for the `snap_getBip44Entropy` permission. $1 is the name of a protocol, e.g. 'Filecoin'."
+  },
+  "permission_manageSnapAccounts": {
+    "message": "Add and control accounts from this Snap",
+    "description": "The description for `snap_manageAccounts` permission"
+  },
+  "permission_manageSnapAccountsDescription": {
+    "message": "Allow $1 to add or remove accounts it provides and to sign messages and transactions for those accounts.",
+    "description": "An extended description for the `snap_manageAccounts` permission. $1 is the snap name."
   },
   "permission_manageState": {
     "message": "Store and manage its data on your device.",
@@ -7886,6 +7891,14 @@
   "permission_signatureInsightOriginDescription": {
     "message": "Allow $1 to see the origin (URI) of websites that initiate signature requests. This can be used for anti-phishing and security solutions.",
     "description": "An extended description for the `signatureOrigin` caveat, to be used with the `endowment:signature-insight` permission. $1 is the snap name."
+  },
+  "permission_snapKeyring": {
+    "message": "Receive requests to add and control accounts from this Snap",
+    "description": "The description for the `endowment:keyring` permission"
+  },
+  "permission_snapKeyringDescription": {
+    "message": "Let $1 receive requests to add or remove accounts it provides and to sign messages and transactions for those accounts.",
+    "description": "An extended description for the `endowment:keyring` permission. $1 is the snap name."
   },
   "permission_transactionInsight": {
     "message": "Fetch and display transaction insights.",

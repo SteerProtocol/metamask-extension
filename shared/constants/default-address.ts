@@ -1,5 +1,7 @@
+import { CardanoScope } from '@metamask/keyring-api';
+
 /**
- * Allowed values for default address scope: which chain namespace is used when
+ * Allowed values for default address scope: which chain namespace or scope is used when
  * showing a single "default" address (e.g. in the account list hover or in Settings).
  */
 export type DefaultAddressScope =
@@ -7,7 +9,8 @@ export type DefaultAddressScope =
   | 'solana'
   | 'bip122'
   | 'tron'
-  | 'stellar';
+  | 'stellar'
+  | CardanoScope.Preview;
 
 /**
  * Default address scope: which chain namespace is used when showing a single
@@ -22,6 +25,7 @@ export const DEFAULT_ADDRESS_OPTIONS: {
   { value: 'bip122', messageKey: 'networkNameBitcoin' },
   { value: 'tron', messageKey: 'networkNameTron' },
   { value: 'stellar', messageKey: 'networkNameStellar' },
+  { value: CardanoScope.Preview, messageKey: 'networkNameCardanoPreview' },
 ];
 
 /**

@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import {
   BtcAccountType,
+  CardanoAccountType,
   EthAccountType,
   SolAccountType,
   TrxAccountType,
@@ -29,6 +30,7 @@ export function AccountOverview(props: AccountOverviewProps) {
       case BtcAccountType.P2sh:
       case BtcAccountType.P2wpkh:
       case BtcAccountType.P2tr:
+      case CardanoAccountType.Base:
       case SolAccountType.DataAccount:
       case TrxAccountType.Eoa:
       case XlmAccountType.Account:

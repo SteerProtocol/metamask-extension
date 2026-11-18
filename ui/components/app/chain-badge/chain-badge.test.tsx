@@ -70,17 +70,19 @@ describe('ChainBadge', () => {
     );
   });
 
-  it('resolves the image with the CAIP id for a non-EVM (Solana) chainId', () => {
-    const solanaChainId = 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp';
-    mockGetImage.mockReturnValue('https://example.com/solana.png');
+  it.each(['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'cip34:0-2'] as const)(
+    'resolves the image with the non-EVM chain ID %s',
+    (chainId) => {
+      mockGetImage.mockReturnValue('https://example.com/network.png');
 
-    const { getByText } = render(
-      <ChainBadge chainId={solanaChainId}>
-        <div>Solana Content</div>
-      </ChainBadge>,
-    );
+      const { getByText } = render(
+        <ChainBadge chainId={chainId}>
+          <div>Activity Content</div>
+        </ChainBadge>,
+      );
 
-    expect(mockGetImage).toHaveBeenCalledWith(solanaChainId);
-    expect(getByText('Solana Content')).toBeInTheDocument();
-  });
+      expect(mockGetImage).toHaveBeenCalledWith(chainId);
+      expect(getByText('Activity Content')).toBeInTheDocument();
+    },
+  );
 });

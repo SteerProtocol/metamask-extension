@@ -5,6 +5,7 @@ import {
   AccountWalletId,
 } from '@metamask/account-api';
 import { AccountGroupObject } from '@metamask/account-tree-controller';
+import { CardanoAccountType, CardanoScope } from '@metamask/keyring-api';
 
 import { KeyringTypes } from '@metamask/keyring-controller';
 
@@ -1472,6 +1473,64 @@ describe('Multichain Accounts Selectors', () => {
   });
 
   describe('getInternalAccountListSpreadByScopesByGroupId', () => {
+    it('includes and resolves the bound Cardano Preview default address when test networks are shown', () => {
+      const account = {
+        ...typedMockState.metamask.internalAccounts.accounts[ACCOUNT_1_ID],
+        address:
+          'addr_test1qzvsqutjxa89ksp6sphm95vxwn4rutxw38vr463rgvm2wk336h0f687s8vnsu0djxpzktpg6meggg54m5ca3jqrmup2s6gwz07',
+        type: CardanoAccountType.Base,
+        scopes: [CardanoScope.Preview],
+        methods: [],
+      };
+      const getState = (
+        showTestNetworks: boolean,
+        scope: CardanoScope = CardanoScope.Preview,
+      ) => ({
+        ...typedMockState,
+        metamask: {
+          ...typedMockState.metamask,
+          preferences: {
+            ...mockState.metamask.preferences,
+            showTestNetworks,
+            defaultAddressScope: CardanoScope.Preview,
+          },
+          internalAccounts: {
+            ...typedMockState.metamask.internalAccounts,
+            accounts: {
+              ...typedMockState.metamask.internalAccounts.accounts,
+              [ACCOUNT_1_ID]: { ...account, scopes: [scope] },
+            },
+          },
+        },
+      });
+      const findPreview = (showTestNetworks: boolean) =>
+        getInternalAccountListSpreadByScopesByGroupId(
+          getState(showTestNetworks),
+          ENTROPY_GROUP_1_ID,
+        ).find(({ scope }) => scope === CardanoScope.Preview);
+
+      expect(findPreview(true)?.account.address).toBe(account.address);
+      expect(findPreview(false)).toBeUndefined();
+      expect(
+        getDefaultScopeAndAddressByAccountGroupId(
+          getState(true),
+          ENTROPY_GROUP_1_ID,
+        ),
+      ).toEqual({
+        defaultAddress: account.address,
+        defaultScopes: [CardanoScope.Preview],
+      });
+      expect(
+        getDefaultScopeAndAddressByAccountGroupId(
+          getState(true, CardanoScope.Preprod),
+          ENTROPY_GROUP_1_ID,
+        ),
+      ).toEqual({
+        defaultAddress: null,
+        defaultScopes: [],
+      });
+    });
+
     it('returns internal accounts spread by scopes for a specific multichain group ID', () => {
       const result = getInternalAccountListSpreadByScopesByGroupId(
         typedMockState,

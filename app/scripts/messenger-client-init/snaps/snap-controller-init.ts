@@ -1,4 +1,5 @@
 import {
+  detectSnapLocation,
   SnapController,
   SnapControllerMessenger,
 } from '@metamask/snaps-controllers';
@@ -7,6 +8,7 @@ import {
   Duration,
   inMilliseconds,
 } from '@metamask/utils';
+import { parse } from 'semver';
 import { MessengerClientInitFunction } from '../types';
 import {
   EndowmentPermissions,
@@ -20,6 +22,22 @@ import { OnboardingControllerState } from '../../controllers/onboarding';
 import { getMnemonicSeed } from '../../controllers/permissions/snaps/utils';
 import { isFlask } from '../../../../shared/lib/build-types';
 import { getClientConfig } from './utils';
+
+const detectVersionedSnapLocation: typeof detectSnapLocation = (
+  id,
+  options,
+) => {
+  const location = detectSnapLocation(id, options);
+  if (!location.shouldAlwaysReload || !parse(options?.versionRange ?? '')) {
+    return location;
+  }
+
+  // Exact-version local requests use SnapController's state-preserving update flow.
+  return {
+    manifest: location.manifest.bind(location),
+    fetch: location.fetch.bind(location),
+  };
+};
 
 /**
  * Initialize the Snap controller.
@@ -108,6 +126,7 @@ export const SnapControllerInit: MessengerClientInitFunction<
     state: persistedState.SnapController,
 
     messenger: controllerMessenger,
+    detectSnapLocation: detectVersionedSnapLocation,
     maxIdleTime: inMilliseconds(2, Duration.Minute),
     featureFlags: {
       allowLocalSnaps,

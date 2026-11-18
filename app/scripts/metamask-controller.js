@@ -186,13 +186,9 @@ import {
 } from '../../shared/lib/selectors/assets-migration';
 import { isPerpsRemoteConfigSatisfied } from '../../shared/lib/perps-feature-flags';
 import { getRemoteFeatureFlags } from '../../shared/lib/selectors/remote-feature-flags';
-import {
-  CARDANO_PREVIEW_LIFECYCLE_EVENTS,
-  CARDANO_PREVIEW_SNAP_ID,
-  createCardanoPreviewDiscovery,
-} from './cardano-preview-discovery';
 import { accountSupports7702 } from './lib/account-supports-7702';
 import { keyringSnapPermissionsBuilder } from './lib/snap-keyring/keyring-snaps-permissions';
+import { registerCardanoAccount } from './lib/snap-keyring/register-cardano-account';
 
 import { AddressBookPetnamesBridge } from './lib/AddressBookPetnamesBridge';
 import { createPPOMMiddleware } from './lib/ppom/ppom-middleware';
@@ -1554,35 +1550,17 @@ export default class MetamaskController extends EventEmitter {
 
     this.setupControllerEventSubscriptions();
 
-    if (
-      isManifestV3 &&
-      process.env.METAMASK_BUILD_APP_ID === 'io.metamask.flask' &&
-      this.extension.scripting
-    ) {
-      this.isCardanoPreviewAvailable = () =>
+    if (isManifestV3 && process.env.METAMASK_CARDANO_SNAP_ID) {
+      const configuredId = process.env.METAMASK_CARDANO_SNAP_ID;
+      this.getCardanoSnapId = () =>
+        isSnapId(configuredId) &&
+        (configuredId.startsWith('npm:') ||
+          configuredId.startsWith('local:')) &&
         this.controllerMessenger
           .call('SnapController:getRunnableSnaps')
-          .some(({ id }) => id === CARDANO_PREVIEW_SNAP_ID);
-      const reconcile = createCardanoPreviewDiscovery({
-        scripting: this.extension.scripting,
-        isAvailable: this.isCardanoPreviewAvailable,
-      });
-      this.syncCardanoPreviewDiscovery = () =>
-        reconcile().catch((error) => {
-          log.error('Could not synchronize Cardano Preview discovery', error);
-        });
-      for (const event of CARDANO_PREVIEW_LIFECYCLE_EVENTS) {
-        this.controllerMessenger.subscribe(
-          `SnapController:${event}`,
-          (snap) => {
-            const id = typeof snap === 'string' ? snap : snap?.id;
-            if (id === CARDANO_PREVIEW_SNAP_ID) {
-              this.syncCardanoPreviewDiscovery();
-            }
-          },
-        );
-      }
-      this.syncCardanoPreviewDiscovery();
+          .some(({ id }) => id === configuredId)
+          ? configuredId
+          : null;
     }
 
     // For more information about these legacy streams, see here:
@@ -2321,8 +2299,8 @@ export default class MetamaskController extends EventEmitter {
        */
       isUnlocked: true,
       accounts: this.getPermittedAccounts(origin),
-      ...(this.isCardanoPreviewAvailable && {
-        cardanoPreviewAvailable: this.isCardanoPreviewAvailable(),
+      ...(this.getCardanoSnapId && {
+        cardanoSnapId: this.getCardanoSnapId(),
       }),
       ...metadata,
       ...providerNetworkState,
@@ -2516,6 +2494,17 @@ export default class MetamaskController extends EventEmitter {
         ),
 
       // AccountsController
+
+      addCardanoAccount: async () => {
+        const snapId = this.getCardanoSnapId?.();
+        if (!snapId) {
+          throw new Error(
+            'Install and enable the configured Cardano Snap first.',
+          );
+        }
+        await this.snapAccountService.ensureReady(snapId);
+        await registerCardanoAccount(this.controllerMessenger, snapId);
+      },
 
       setAccountName:
         accountsController.setAccountName.bind(accountsController),
@@ -4277,20 +4266,6 @@ export default class MetamaskController extends EventEmitter {
 
     // Append origin to each request
     engine.push(createOriginMiddleware({ origin }));
-
-    if (this.syncCardanoPreviewDiscovery) {
-      engine.push(
-        createAsyncMiddleware(async (req, res, runDownstream) => {
-          await runDownstream();
-          if (
-            req.method === 'wallet_requestSnaps' &&
-            Object.hasOwn(res.result ?? {}, CARDANO_PREVIEW_SNAP_ID)
-          ) {
-            await this.syncCardanoPreviewDiscovery();
-          }
-        }),
-      );
-    }
 
     // Append mainFrameOrigin to each request if present
     if (mainFrameOrigin) {

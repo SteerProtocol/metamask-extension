@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import classnames from 'clsx';
 import {
   Box,
@@ -18,9 +18,10 @@ import { shortenAddress } from '../../../helpers/utils/util';
 
 import { useI18nContext } from '../../../hooks/useI18nContext';
 import { CopyParams } from '../multichain-address-row/multichain-address-row';
-import { getNetworksByScopes } from '../../../../shared/lib/selectors/networks';
+import { getAllNetworkConfigurationsByCaipChainId } from '../../../../shared/lib/selectors/networks';
 import { MultichainAccountNetworkGroup } from '../multichain-account-network-group';
 import { normalizeSafeAddress } from '../../../../shared/lib/multichain/address';
+import type { MetaMaskReduxState } from '../../../store/store';
 
 type MultichainAggregatedAddressListRowProps = {
   /**
@@ -80,13 +81,13 @@ export const MultichainAggregatedAddressListRow = ({
     };
   }, []);
 
-  const networks = useSelector((state) => getNetworksByScopes(state, chainIds));
-
-  const groupName = useMemo(() => {
-    return chainIds.some((chain) => chain.startsWith('eip155:'))
-      ? t('networkNameEthereum')
-      : networks[0]?.name;
-  }, [chainIds, t, networks]);
+  const networkName = useSelector((state: MetaMaskReduxState) => {
+    const networks = getAllNetworkConfigurationsByCaipChainId(state);
+    return chainIds.map((chainId) => networks[chainId]).find(Boolean)?.name;
+  });
+  const groupName = chainIds.some((chain) => chain.startsWith('eip155:'))
+    ? t('networkNameEthereum')
+    : networkName;
 
   // Handle "Copy" button click events
   const handleCopyClick = (e: React.MouseEvent<HTMLDivElement>) => {

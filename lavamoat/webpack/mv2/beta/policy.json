@@ -2245,6 +2245,7 @@
         "@metamask/keyring-utils": true,
         "@metamask/superstruct": true,
         "@metamask/utils": true,
+        "@scure/base": true,
         "bitcoin-address-validation": true
       }
     },

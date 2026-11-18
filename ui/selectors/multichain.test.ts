@@ -3,7 +3,14 @@ import { Cryptocurrency } from '@metamask/assets-controllers';
 import { RpcEndpointType } from '@metamask/network-controller';
 import { Hex } from '@metamask/utils';
 import { InternalAccount } from '@metamask/keyring-internal-api';
-import { BtcScope, SolScope, TrxScope, XlmScope } from '@metamask/keyring-api';
+import {
+  BtcScope,
+  CardanoAccountType,
+  CardanoScope,
+  SolScope,
+  TrxScope,
+  XlmScope,
+} from '@metamask/keyring-api';
 import {
   type SupportedCaipChainId,
   AVAILABLE_MULTICHAIN_NETWORK_CONFIGURATIONS,
@@ -855,6 +862,34 @@ describe('Multichain Selectors', () => {
 
       expect(getMultichainSelectedAccountCachedBalance(state)).toBe(
         getSelectedAccountCachedBalance(state),
+      );
+    });
+
+    it('returns the selected Cardano Preview account balance in ADA', () => {
+      const state = getNonEvmState(undefined, CardanoScope.Preview);
+      const account = {
+        ...MOCK_ACCOUNT_BIP122_P2WPKH,
+        type: CardanoAccountType.Base,
+        scopes: [CardanoScope.Preview],
+        methods: [],
+      };
+      state.metamask.internalAccounts.accounts = {
+        ...state.metamask.internalAccounts.accounts,
+        [account.id]: account,
+      };
+      const asset = `${CardanoScope.Preview}/slip44:1815` as const;
+      state.metamask.assetsBalance[account.id] = {
+        [asset]: { amount: '10.000000' },
+      };
+      state.metamask.assetsInfo[asset] = {
+        type: 'native',
+        name: 'Cardano Preview ADA',
+        symbol: 'tADA',
+        decimals: 6,
+      };
+
+      expect(getMultichainSelectedAccountCachedBalance(state)).toBe(
+        '10.000000',
       );
     });
 

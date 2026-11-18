@@ -137,22 +137,25 @@ export const NetworkEnablementControllerInit: MessengerClientInitFunction<
   ).state;
 
   const networkControllerState = getMessengerClient('NetworkController').state;
+  const defaults = generateDefaultNetworkEnablementControllerState(
+    networkControllerState,
+    multichainNetworkControllerState,
+  );
+  const persisted = persistedState.NetworkEnablementController;
 
   const messengerClient = new NetworkEnablementController({
     messenger: controllerMessenger,
     state: {
-      ...generateDefaultNetworkEnablementControllerState(
-        networkControllerState,
-        multichainNetworkControllerState,
-      ),
-      ...persistedState.NetworkEnablementController,
+      ...defaults,
+      ...persisted,
+      enabledNetworkMap: {
+        ...defaults.enabledNetworkMap,
+        ...persisted?.enabledNetworkMap,
+      },
     },
   });
 
-  if (
-    !process.env.IN_TEST &&
-    !persistedState.NetworkEnablementController?.enabledNetworkMap
-  ) {
+  if (!process.env.IN_TEST && !persisted?.enabledNetworkMap) {
     messengerClient.enableAllPopularNetworks();
   }
 

@@ -3,13 +3,10 @@ import {
   AvatarNetwork,
   AvatarNetworkSize,
 } from '@metamask/design-system-react';
-import {
-  formatChainIdToHex,
-  isNonEvmChainId,
-} from '@metamask/bridge-controller';
 import type { CaipChainId } from '@metamask/utils';
 import { useSelector } from 'react-redux';
 import { getAllNetworkConfigurationsByCaipChainId } from '../../../../shared/lib/selectors/networks';
+import { getMaybeHexChainId } from '../../../ducks/bridge/utils';
 import { getImageForChainId } from '../../../selectors/multichain';
 
 export function NetworkName({ chainId }: { chainId: string }) {
@@ -17,7 +14,7 @@ export function NetworkName({ chainId }: { chainId: string }) {
   const network = config[chainId as CaipChainId];
   const networkName = network?.name ?? chainId;
   const networkImage = getImageForChainId(
-    isNonEvmChainId(chainId) ? chainId : formatChainIdToHex(chainId),
+    getMaybeHexChainId(chainId) ?? chainId,
   );
 
   return (

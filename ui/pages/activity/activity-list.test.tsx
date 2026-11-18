@@ -1,5 +1,17 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+  fireEvent,
+  render as renderComponent,
+  screen,
+} from '@testing-library/react';
+import { Provider } from 'react-redux';
+import configureMockStore from 'redux-mock-store';
+import {
+  CardanoAccountType,
+  CardanoScope,
+  SolAccountType,
+  SolScope,
+} from '@metamask/keyring-api';
 import type { ActivityListItem } from '../../../shared/lib/activity/types';
 import { ScreenViewedEntryPoint } from '../../../shared/constants/metametrics';
 import { ActivityList } from './activity-list';
@@ -8,6 +20,55 @@ const mockUseTransactionsQuery = jest.fn();
 const mockUseActivityScreenViewed = jest.fn();
 const mockUseLocalTransactions = jest.fn((): ActivityListItem[] => []);
 const mockUseRampsOrderActivity = jest.fn((): ActivityListItem[] => []);
+const mockMultichainUpdateTransactions = jest.fn().mockResolvedValue(undefined);
+const mockPreviewScope = CardanoScope.Preview;
+
+jest.mock('../../store/actions', () => ({
+  multichainUpdateTransactions: (id: string) =>
+    mockMultichainUpdateTransactions(id),
+}));
+
+const store = configureMockStore()({
+  metamask: {
+    selectedAccountGroup: 'selected',
+    accountTree: {
+      wallets: {
+        wallet: {
+          groups: {
+            selected: { accounts: ['cardano', 'solana'] },
+            other: { accounts: ['other-cardano'] },
+          },
+        },
+      },
+    },
+    internalAccounts: {
+      accounts: {
+        cardano: {
+          id: 'cardano',
+          type: CardanoAccountType.Base,
+          scopes: [CardanoScope.Preview],
+          metadata: { snap: { id: 'local:cardano' } },
+        },
+        solana: {
+          id: 'solana',
+          type: SolAccountType.DataAccount,
+          scopes: [SolScope.Mainnet],
+          metadata: { snap: { id: 'local:solana' } },
+        },
+        'other-cardano': {
+          id: 'other-cardano',
+          type: CardanoAccountType.Base,
+          scopes: [CardanoScope.Preview],
+          metadata: { snap: { id: 'local:cardano' } },
+        },
+      },
+    },
+  },
+});
+
+function render(ui: React.JSX.Element) {
+  return renderComponent(<Provider store={store}>{ui}</Provider>);
+}
 
 jest.mock('./useActivityScreenViewed', () => ({
   useActivityScreenViewed: (props: unknown) =>
@@ -73,7 +134,28 @@ jest.mock('../../hooks/useFormatters', () => ({
 
 jest.mock(
   '../../components/app/assets/asset-list/asset-list-control-bar/asset-list-control-bar',
-  () => () => null,
+  () =>
+    ({
+      onNetworkSelect,
+      onRefresh,
+    }: {
+      onNetworkSelect: (networks: string[]) => void;
+      onRefresh?: () => void;
+    }) => (
+      <>
+        <button
+          type="button"
+          onClick={() => onNetworkSelect([mockPreviewScope])}
+        >
+          Cardano Preview
+        </button>
+        {onRefresh && (
+          <button type="button" onClick={onRefresh}>
+            Refresh list
+          </button>
+        )}
+      </>
+    ),
 );
 
 jest.mock(
@@ -143,6 +225,26 @@ describe('ActivityList', () => {
         entryPoint: ScreenViewedEntryPoint.BottomNavClick,
       }),
     );
+  });
+
+  it('refreshes the Snap account in the current group and selected network', () => {
+    const refetch = jest.fn();
+    mockUseTransactionsQuery.mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      isEnabled: false,
+      refetch,
+      fetchNextVisiblePage: jest.fn(),
+    });
+
+    render(<ActivityList />);
+    expect(screen.queryByRole('button', { name: 'Refresh list' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Cardano Preview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh list' }));
+
+    expect(mockMultichainUpdateTransactions).toHaveBeenCalledTimes(1);
+    expect(mockMultichainUpdateTransactions).toHaveBeenCalledWith('cardano');
+    expect(refetch).not.toHaveBeenCalled();
   });
 
   it('navigates to details using the internal ramps order code', () => {

@@ -1,4 +1,9 @@
-import { BtcScope, SolScope } from '@metamask/keyring-api';
+import {
+  BtcScope,
+  CardanoAccountType,
+  CardanoScope,
+  SolScope,
+} from '@metamask/keyring-api';
 import {
   type NetworkConfiguration,
   RpcEndpointType,
@@ -195,6 +200,43 @@ const mockState: TestState = {
 
 describe('Multichain network selectors', () => {
   describe('getNonEvmMultichainNetworkConfigurationsByChainId', () => {
+    it('includes Cardano Preview only with a matching account', () => {
+      const network = {
+        chainId: CardanoScope.Preview,
+        name: 'Cardano Preview',
+        nativeCurrency: `${CardanoScope.Preview}/slip44:1815`,
+        isEvm: false,
+      } as const;
+      const state = {
+        metamask: {
+          ...mockState.metamask,
+          multichainNetworkConfigurationsByChainId: {
+            ...mockNonEvmNetworks,
+            [CardanoScope.Preview]: network,
+          },
+        },
+      };
+      expect(
+        getNonEvmMultichainNetworkConfigurationsByChainId(state),
+      ).not.toHaveProperty(CardanoScope.Preview);
+      const account = {
+        ...MOCK_ACCOUNT_EOA,
+        type: CardanoAccountType.Base,
+        scopes: [CardanoScope.Preview],
+      };
+      expect(
+        getNonEvmMultichainNetworkConfigurationsByChainId({
+          metamask: {
+            ...state.metamask,
+            internalAccounts: {
+              selectedAccount: account.id,
+              accounts: { [account.id]: account },
+            },
+          },
+        }),
+      ).toHaveProperty(CardanoScope.Preview, network);
+    });
+
     it('returns the non-EVM multichain network configurations by chain ID', () => {
       expect(
         getNonEvmMultichainNetworkConfigurationsByChainId(mockState),

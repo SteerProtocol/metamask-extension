@@ -1,4 +1,5 @@
 import {
+  isCaipChainId,
   parseCaipAssetType,
   type CaipAssetType,
   type CaipChainId,
@@ -22,7 +23,10 @@ import {
   BRIDGE_CHAINID_COMMON_TOKEN_PAIR,
   BRIDGE_CHAINID_TO_DEFAULT_FROM_TOKEN,
 } from '../../../shared/constants/bridge';
-import { getAssetImageUrl } from '../../../shared/lib/asset-utils';
+import {
+  getAssetImageUrl,
+  isEvmChainId,
+} from '../../../shared/lib/asset-utils';
 import { BridgeAssetSecurityDataType } from '../../pages/bridge/utils/tokens';
 import type { TokenPayload, BridgeToken } from './types';
 
@@ -41,7 +45,10 @@ export const getMaybeHexChainId = (chainId?: string) => {
   if (!chainId) {
     return undefined;
   }
-  return isNonEvmChainId(chainId) ? undefined : formatChainIdToHex(chainId);
+  const isNonEvm = isCaipChainId(chainId)
+    ? !isEvmChainId(chainId)
+    : isNonEvmChainId(chainId);
+  return isNonEvm ? undefined : formatChainIdToHex(chainId);
 };
 
 /**

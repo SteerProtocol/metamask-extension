@@ -5,6 +5,7 @@ import {
   isStellarChainId,
 } from '@metamask/bridge-controller';
 import { useMemo } from 'react';
+import { CardanoScope } from '@metamask/keyring-api';
 
 import { useSendContext } from '../../context/send';
 import { isTronChainId } from '../../utils/network';
@@ -12,6 +13,7 @@ import { isTronChainId } from '../../utils/network';
 export const useSendType = () => {
   const { asset, chainId } = useSendContext();
   const address = asset?.address || asset?.assetId;
+  const isCardanoSendType = chainId === CardanoScope.Preview;
 
   // isSolanaChainId is added here for evmCheck as native sol token has valid evm address in extension
   const isEvmSendType = useMemo(
@@ -43,15 +45,18 @@ export const useSendType = () => {
   return useMemo(
     () => ({
       isBitcoinSendType,
+      isCardanoSendType,
       isEvmSendType,
       isEvmNativeSendType: isEvmSendType && assetIsNative,
       isNonEvmSendType:
         isSolanaSendType ||
+        isCardanoSendType ||
         isBitcoinSendType ||
         isTronSendType ||
         isStellarSendType,
       isNonEvmNativeSendType:
         (isSolanaSendType && assetIsNative) ||
+        (isCardanoSendType && assetIsNative) ||
         (isBitcoinSendType && assetIsNative) ||
         (isTronSendType && assetIsNative) ||
         (isStellarSendType && assetIsNative),
@@ -64,6 +69,7 @@ export const useSendType = () => {
       isSolanaSendType,
       assetIsNative,
       isBitcoinSendType,
+      isCardanoSendType,
       isTronSendType,
       isStellarSendType,
     ],

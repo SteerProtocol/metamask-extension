@@ -38,6 +38,19 @@ const RIGHT_INFO_ICON = (
   <Icon name={IconName.Info} size={IconSize.Sm} color={IconColor.iconMuted} />
 );
 
+function getBip32PermissionName(t, path, curve) {
+  const [root, purpose, coinType] = path;
+  if (
+    curve === 'ed25519Bip32' &&
+    root === 'm' &&
+    purpose === "1852'" &&
+    coinType === "1815'"
+  ) {
+    return t('cardanoDerivationPath', [path.join('/'), curve]);
+  }
+  return getSnapDerivationPathName(path, curve);
+}
+
 function getSnapNameComponent(snapName) {
   return (
     <Text
@@ -102,6 +115,7 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
     subjectName,
   }) =>
     permissionValue.caveats[0].value.map(({ path, curve }, i) => {
+      const friendlyName = getBip32PermissionName(t, path, curve);
       const baseDescription = {
         leftIcon: IconName.SecuritySearch,
         weight: PermissionWeight.snap_getBip32PublicKey,
@@ -109,11 +123,10 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
           .join('-')
           ?.replace(/'/gu, 'h')}-${curve}-${i}`,
         warningMessageSubject:
-          getSnapDerivationPathName(path, curve) ??
+          friendlyName ??
           `${t('unknownNetworkForKeyEntropy')}  ${path.join('/')} (${curve})`,
       };
 
-      const friendlyName = getSnapDerivationPathName(path, curve);
       if (friendlyName) {
         return {
           ...baseDescription,
@@ -173,6 +186,7 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
     subjectName,
   }) =>
     permissionValue.caveats[0].value.map(({ path, curve }, i) => {
+      const friendlyName = getBip32PermissionName(t, path, curve);
       const baseDescription = {
         leftIcon: IconName.Key,
         weight: PermissionWeight.snap_getBip32Entropy,
@@ -180,11 +194,10 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
           .join('-')
           ?.replace(/'/gu, 'h')}-${curve}-${i}`,
         warningMessageSubject:
-          getSnapDerivationPathName(path, curve) ??
+          friendlyName ??
           `${t('unknownNetworkForKeyEntropy')} ${path.join('/')} (${curve})`,
       };
 
-      const friendlyName = getSnapDerivationPathName(path, curve);
       if (friendlyName) {
         return {
           ...baseDescription,
@@ -523,8 +536,8 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
     weight: PermissionWeight.endowment_pageHome,
   }),
   [RestrictedMethods.snap_manageAccounts]: ({ t, subjectName }) => ({
-    label: t('permission_manageAccounts'),
-    description: t('permission_manageAccountsDescription', [
+    label: t('permission_manageSnapAccounts'),
+    description: t('permission_manageSnapAccountsDescription', [
       getSnapNameComponent(subjectName),
     ]),
     leftIcon: IconName.UserCircleAdd,
@@ -532,8 +545,8 @@ const PERMISSION_DESCRIPTIONS = deepFreeze({
     weight: PermissionWeight.snap_manageAccounts,
   }),
   [EndowmentPermissions['endowment:keyring']]: ({ t, subjectName }) => ({
-    label: t('permission_keyring'),
-    description: t('permission_keyringDescription', [
+    label: t('permission_snapKeyring'),
+    description: t('permission_snapKeyringDescription', [
       getSnapNameComponent(subjectName),
     ]),
     leftIcon: IconName.UserCircleAdd,

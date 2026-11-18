@@ -25,6 +25,7 @@ import {
 } from '../../../../helpers/constants/routes';
 import { useDispatch } from '../../../../store/hooks';
 import { useSnapHome } from './useSnapHome';
+import { AddCardanoAccount } from './add-cardano-account';
 
 export const SnapHomeRenderer = ({ snapId }) => {
   const dispatch = useDispatch();
@@ -91,12 +92,15 @@ export const SnapHomeRenderer = ({ snapId }) => {
   }
 
   return (
-    <SnapUIRenderer
-      snapId={snapId}
-      interfaceId={interfaceId}
-      isLoading={loading}
-      useFooter
-    />
+    <>
+      {interfaceId && <AddCardanoAccount snapId={snapId} />}
+      <SnapUIRenderer
+        snapId={snapId}
+        interfaceId={interfaceId}
+        isLoading={loading}
+        useFooter
+      />
+    </>
   );
 };
 

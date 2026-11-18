@@ -1,11 +1,13 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Box, BoxFlexDirection } from '@metamask/design-system-react';
+import { CardanoScope } from '@metamask/keyring-api';
 import Dropdown from '../../../components/ui/dropdown';
 import { useI18nContext } from '../../../hooks/useI18nContext';
 import {
   getShowDefaultAddressPreference,
   getDefaultAddressScope,
+  getShowTestNetworksPreference,
 } from '../../../selectors';
 import {
   setShowDefaultAddress,
@@ -20,9 +22,11 @@ import {
   DEFAULT_ADDRESS_OPTIONS,
   type DefaultAddressScope,
 } from '../../../../shared/constants/default-address';
+import { getAllNetworkConfigurationsByCaipChainId } from '../../../../shared/lib/selectors/networks';
 import { SettingsToggleItem } from '../shared/settings-toggle-item';
 import { PREFERENCES_ITEMS } from '../search-config';
 import { useDispatch } from '../../../store/hooks';
+import type { MetaMaskReduxState } from '../../../store/store';
 
 export const ShowDefaultAddressItem = () => {
   const t = useI18nContext();
@@ -34,10 +38,19 @@ export const ShowDefaultAddressItem = () => {
     getDefaultAddressScope,
   ) as DefaultAddressScope;
 
-  const defaultAddressDropdownOptions = DEFAULT_ADDRESS_OPTIONS.map((opt) => ({
-    name: t(opt.messageKey),
-    value: opt.value,
-  }));
+  const canSelectCardanoPreview = useSelector(
+    (state: MetaMaskReduxState) =>
+      getShowTestNetworksPreference(state) &&
+      Boolean(
+        getAllNetworkConfigurationsByCaipChainId(state)[CardanoScope.Preview],
+      ),
+  );
+  const defaultAddressDropdownOptions = DEFAULT_ADDRESS_OPTIONS.filter(
+    ({ value }) =>
+      value !== CardanoScope.Preview ||
+      value === defaultAddressScope ||
+      canSelectCardanoPreview,
+  ).map(({ messageKey, value }) => ({ name: t(messageKey), value }));
 
   const trackShowDefaultAddress = (
     enabled: boolean,

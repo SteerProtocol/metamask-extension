@@ -47,6 +47,7 @@ import { registerBitcoinWalletStandard } from '@metamask/bitcoin-wallet-standard
 
 import shouldInjectProvider from '../../shared/lib/provider-injection';
 import { METAMASK_EIP_1193_PROVIDER } from './constants/stream';
+import { registerCardanoWallet } from './cardano-provider';
 
 // contexts
 const CONTENT_SCRIPT = 'metamask-contentscript';
@@ -108,7 +109,7 @@ if (shouldInjectProvider()) {
     console.warn(warningMsg);
   });
 
-  initializeProvider({
+  const provider = initializeProvider({
     connectionStream: mux.createStream(METAMASK_EIP_1193_PROVIDER),
     logger: log,
     shouldShimWeb3: true,
@@ -120,6 +121,14 @@ if (shouldInjectProvider()) {
       rdns: process.env.METAMASK_BUILD_APP_ID,
     },
   });
+
+  if (process.env.METAMASK_CARDANO_SNAP_ID) {
+    registerCardanoWallet(
+      provider.request,
+      process.env.METAMASK_CARDANO_SNAP_ID,
+      process.env.METAMASK_BUILD_NAME,
+    );
+  }
 
   // Solana Wallet Standard registration
   const solanaMultichainClient = getMultichainClient({

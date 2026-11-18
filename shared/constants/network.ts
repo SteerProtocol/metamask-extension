@@ -12,7 +12,10 @@ import {
 import { NON_EVM_TESTNET_IDS } from '@metamask/multichain-network-controller';
 import { CHAIN_IDS } from './chain-ids';
 import { getFailoverUrlsForChainId } from './network-failover';
-import { MultichainNetworks } from './multichain/networks';
+import {
+  CARDANO_TOKEN_IMAGE_URL,
+  MultichainNetworks,
+} from './multichain/networks';
 
 /**
  * A type representing built-in network types, used as an identifier.
@@ -1180,6 +1183,7 @@ export const CHAIN_ID_TO_NETWORK_IMAGE_URL_MAP: Record<string, string> = {
   [MultichainNetworks.TRON_NILE]: TRON_NILE_IMAGE_URL,
   [MultichainNetworks.TRON_SHASTA]: TRON_SHASTA_IMAGE_URL,
   [MultichainNetworks.STELLAR]: STELLAR_IMAGE_URL,
+  [MultichainNetworks.CardanoPreview]: CARDANO_TOKEN_IMAGE_URL,
   [CHAINLIST_CHAIN_IDS_MAP.XRPLEVM_TESTNET]: XRPLEVM_TESTNET_IMAGE_URL,
   [CHAIN_IDS.LENS]: LENS_IMAGE_URL,
   [CHAIN_IDS.PLUME]: PLUME_IMAGE_URL,
@@ -1336,6 +1340,7 @@ export const CHAIN_ID_TOKEN_IMAGE_MAP = {
   [MultichainNetworks.TRON_NILE]: TRON_NILE_IMAGE_URL,
   [MultichainNetworks.TRON_SHASTA]: TRON_SHASTA_IMAGE_URL,
   [MultichainNetworks.STELLAR]: STELLAR_IMAGE_URL,
+  [MultichainNetworks.CardanoPreview]: CARDANO_TOKEN_IMAGE_URL,
 } as const;
 
 /**

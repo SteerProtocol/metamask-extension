@@ -1,6 +1,8 @@
 import { CaipChainId } from '@metamask/utils';
 import {
   BtcAccountType,
+  CardanoScope,
+  isCardanoPaymentAddress,
   SolAccountType,
   BtcScope,
   SolScope,
@@ -72,6 +74,8 @@ export enum MultichainNetworks {
   TRON_SHASTA = TrxScope.Shasta,
 
   STELLAR = XlmScope.Pubnet,
+
+  CardanoPreview = CardanoScope.Preview,
 }
 
 export const MULTICHAIN_TESTNET_NETWORKS: readonly MultichainNetworks[] = [
@@ -81,6 +85,7 @@ export const MULTICHAIN_TESTNET_NETWORKS: readonly MultichainNetworks[] = [
   MultichainNetworks.SOLANA_TESTNET,
   MultichainNetworks.TRON_NILE,
   MultichainNetworks.TRON_SHASTA,
+  MultichainNetworks.CardanoPreview,
 ];
 
 // TODO: This data should be provided by the snap
@@ -100,6 +105,7 @@ export const MULTICHAIN_NETWORK_TO_ACCOUNT_TYPE_NAME: Record<
   [TrxScope.Nile]: 'Tron',
   [TrxScope.Shasta]: 'Tron',
   [XlmScope.Pubnet]: 'Stellar',
+  [CardanoScope.Preview]: 'Cardano Preview',
 } as const;
 
 export const MULTICHAIN_ACCOUNT_TYPE_TO_MAINNET = {
@@ -123,6 +129,7 @@ export const MULTICHAIN_NETWORK_TO_NICKNAME: Record<CaipChainId, string> = {
   [MultichainNetworks.TRON_NILE]: 'Tron Nile Testnet',
   [MultichainNetworks.TRON_SHASTA]: 'Tron Shasta Testnet',
   [MultichainNetworks.STELLAR]: 'Stellar',
+  [MultichainNetworks.CardanoPreview]: 'Cardano Preview',
 } as const;
 
 // TODO: This data should be provided by the snap
@@ -141,6 +148,8 @@ export const TRON_NILE_TOKEN_IMAGE_URL = './images/tron-logo-testnet.svg';
 export const TRON_SHASTA_TOKEN_IMAGE_URL = './images/tron-logo-testnet.svg';
 
 export const STELLAR_TOKEN_IMAGE_URL = './images/xlm.svg';
+export const CARDANO_TOKEN_IMAGE_URL = './images/cardano.svg';
+const CARDANO_PREVIEW_EXPLORER_URL = 'https://preview.cexplorer.io';
 
 export const BITCOIN_BLOCK_EXPLORER_URL = 'https://mempool.space';
 export const BITCOIN_BLOCK_EXPLORER_NAME = 'Mempool';
@@ -221,6 +230,12 @@ export const MULTICHAIN_NETWORK_BLOCK_EXPLORER_FORMAT_URLS_MAP: Record<
     asset: `${STELLAR_BLOCK_EXPLORER_URL}/explorer/public/asset/{asset}`,
     transaction: `${STELLAR_BLOCK_EXPLORER_URL}/explorer/public/tx/{txId}`,
   },
+  [MultichainNetworks.CardanoPreview]: {
+    name: 'Cexplorer',
+    url: CARDANO_PREVIEW_EXPLORER_URL,
+    address: `${CARDANO_PREVIEW_EXPLORER_URL}/address/{address}`,
+    transaction: `${CARDANO_PREVIEW_EXPLORER_URL}/tx/{txId}`,
+  },
 } as const;
 
 export const MULTICHAIN_TOKEN_IMAGE_MAP: Record<CaipChainId, string> = {
@@ -234,6 +249,7 @@ export const MULTICHAIN_TOKEN_IMAGE_MAP: Record<CaipChainId, string> = {
   [MultichainNetworks.TRON_NILE]: TRON_NILE_TOKEN_IMAGE_URL,
   [MultichainNetworks.TRON_SHASTA]: TRON_SHASTA_TOKEN_IMAGE_URL,
   [MultichainNetworks.STELLAR]: STELLAR_TOKEN_IMAGE_URL,
+  [MultichainNetworks.CardanoPreview]: CARDANO_TOKEN_IMAGE_URL,
 } as const;
 
 /**
@@ -466,6 +482,21 @@ export const MULTICHAIN_PROVIDER_CONFIGS: Record<
         MultichainNetworks.STELLAR
       ],
     isAddressCompatible: isStellarAddress,
+  },
+  [MultichainNetworks.CardanoPreview]: {
+    chainId: CardanoScope.Preview,
+    ticker: 'tADA',
+    nickname: 'Cardano Preview',
+    type: 'rpc',
+    decimals: 6,
+    rpcPrefs: {
+      imageUrl: CARDANO_TOKEN_IMAGE_URL,
+      blockExplorerUrl: CARDANO_PREVIEW_EXPLORER_URL,
+    },
+    blockExplorerFormatUrls:
+      MULTICHAIN_NETWORK_BLOCK_EXPLORER_FORMAT_URLS_MAP[CardanoScope.Preview],
+    isAddressCompatible: (address) =>
+      isCardanoPaymentAddress(address, CardanoScope.Preview),
   },
 };
 

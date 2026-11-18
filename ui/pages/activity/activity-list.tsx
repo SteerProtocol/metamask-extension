@@ -5,6 +5,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useSelector } from 'react-redux';
+import { isEvmAccountType } from '@metamask/keyring-api';
+import log from 'loglevel';
 import { PendingTransactionCancelSpeedUpProvider } from '../../components/app/pending-transaction-action-buttons/pending-transaction-cancel-speed-up-provider';
 import AssetListControlBar from '../../components/app/assets/asset-list/asset-list-control-bar/asset-list-control-bar';
 import { TransactionActivityEmptyState } from '../../components/app/transaction-activity-empty-state';
@@ -26,6 +29,11 @@ import type { ActivityListItem } from '../../../shared/lib/activity/types';
 import { TransactionDetails } from '../details/transaction-details';
 import { useRampsOrderActivity } from '../../hooks/ramps/useRampsOrderActivity';
 import { TX_DETAILS_ROUTE } from '../../helpers/constants/routes';
+import {
+  getInternalAccountsFromGroupById,
+  getSelectedAccountGroup,
+} from '../../selectors/multichain-accounts/account-tree';
+import { multichainUpdateTransactions } from '../../store/actions';
 import { ActivityListSkeleton } from './components/activity-list-skeleton';
 import { ActivityRow } from './rows/activity-row';
 import {
@@ -72,8 +80,26 @@ export function ActivityList({
     networks: deferredNetworks ?? [],
   };
 
-  const { data, isLoading, fetchNextVisiblePage } =
+  const { data, isLoading, fetchNextVisiblePage, isEnabled, refetch } =
     useTransactionsQuery(filters);
+  const selectedGroupId = useSelector(getSelectedAccountGroup);
+  const selectedAccounts = useSelector((state) =>
+    getInternalAccountsFromGroupById(state, selectedGroupId),
+  );
+  const refreshableAccounts = selectedAccounts.filter(
+    ({ type, metadata, scopes }) =>
+      metadata.snap &&
+      !isEvmAccountType(type) &&
+      scopes.some((scope) => deferredNetworks?.includes(scope)),
+  );
+  const handleRefresh = () => {
+    if (isEnabled) {
+      refetch().catch(log.error);
+    }
+    for (const { id } of refreshableAccounts) {
+      multichainUpdateTransactions(id).catch(log.error);
+    }
+  };
 
   const localItems = useLocalTransactions(filters);
   const nonEvmItems = useNonEvmTransactions(filters);
@@ -193,6 +219,7 @@ export function ActivityList({
           showSortControl={false}
           showImportTokenButton={false}
           onNetworkSelect={setNetworks}
+          onRefresh={refreshableAccounts.length ? handleRefresh : undefined}
           data-testid="parent-selector-activity-tab"
         />
       )}

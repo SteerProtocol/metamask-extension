@@ -47,6 +47,11 @@ export function setEnvironmentVariables({
   variables,
   version,
 }: SetEnvironmentVariablesOptions): void {
+  const cardanoSnapId = variables.getMaybe('METAMASK_CARDANO_SNAP_ID');
+  const canLoadCardanoSnap =
+    typeof cardanoSnapId === 'string' &&
+    (cardanoSnapId.startsWith('npm:') ||
+      (buildType === 'flask' && cardanoSnapId.startsWith('local:')));
   variables.set({
     DEBUG: isDevBuild || isTestBuild ? variables.getMaybe('DEBUG') : undefined,
     EIP_4337_ENTRYPOINT: isTestBuild
@@ -63,6 +68,7 @@ export function setEnvironmentVariables({
     SENTRY_DISTRIBUTED_TRACING_DISABLED:
       variables.getMaybe('SENTRY_DISTRIBUTED_TRACING_DISABLED') === true,
     METAMASK_BUILD_NAME: buildName,
+    METAMASK_CARDANO_SNAP_ID: canLoadCardanoSnap ? cardanoSnapId : null,
     METAMASK_BUILD_APP_ID: getBuildAppId({
       buildType,
     }),

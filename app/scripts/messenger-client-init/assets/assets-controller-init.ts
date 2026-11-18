@@ -1,5 +1,6 @@
 import {
   AssetsController,
+  buildDefaultAssetsInfo,
   type AssetsControllerMessenger,
   type AssetsControllerOptions,
 } from '@metamask/assets-controller';
@@ -28,6 +29,8 @@ import {
   type AssetsUnifyStateFeatureFlag,
 } from '../../../../shared/lib/assets-unify-state/remote-feature-flag';
 import { CHAIN_IDS } from '../../../../shared/constants/network';
+import { MultichainNativeAssets } from '../../../../shared/constants/multichain/assets';
+import { CARDANO_TOKEN_IMAGE_URL } from '../../../../shared/constants/multichain/networks';
 
 const ARC_CAIP_CHAIN_ID = toEvmCaipChainId(CHAIN_IDS.ARC);
 
@@ -283,9 +286,26 @@ export const AssetsControllerInit: MessengerClientInitFunction<
 
   // Create the controller - it now creates all data sources internally.
   // queryApiClient is cast to the package's type to avoid duplicate @metamask/core-backend type conflicts.
+  const persisted = persistedState.AssetsController;
+  const hasCardanoSnap = Boolean(process.env.METAMASK_CARDANO_SNAP_ID);
+  const state: AssetsControllerOptions['state'] = hasCardanoSnap
+    ? {
+        ...persisted,
+        assetsInfo: {
+          ...(persisted?.assetsInfo ?? buildDefaultAssetsInfo()),
+          [MultichainNativeAssets.CardanoPreview]: {
+            type: 'native',
+            symbol: 'tADA',
+            name: 'Cardano Preview ADA',
+            decimals: 6,
+            image: CARDANO_TOKEN_IMAGE_URL,
+          },
+        },
+      }
+    : persisted;
   const messengerClient = new AssetsController({
     messenger: controllerMessenger,
-    state: persistedState.AssetsController,
+    state,
     isEnabled: () => clientController().state.isUiOpen,
     isBasicFunctionality,
     subscribeToBasicFunctionalityChange,

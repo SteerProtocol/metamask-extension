@@ -67,6 +67,25 @@ describe('./utils/config.ts', () => {
       );
     });
 
+    it('only exposes the configured Cardano Snap ID in Manifest V3 builds', () => {
+      const snapId = 'npm:@test/cardano-wallet';
+      mockRc({ METAMASK_CARDANO_SNAP_ID: snapId });
+      const buildTypes = loadBuildTypesConfig();
+      const { args } = parseArgv([], buildTypes);
+
+      const mv3 = config.getVariables(
+        { ...args, manifestVersion: 3 },
+        buildTypes,
+      );
+      const mv2 = config.getVariables(
+        { ...args, manifestVersion: 2 },
+        buildTypes,
+      );
+
+      assert.strictEqual(mv3.variables.get('METAMASK_CARDANO_SNAP_ID'), snapId);
+      assert.strictEqual(mv2.variables.get('METAMASK_CARDANO_SNAP_ID'), null);
+    });
+
     it('should prefer .metamaskprodrc over .metamaskrc', () => {
       const buildTypes = loadBuildTypesConfig();
       const { args } = parseArgv([], buildTypes);

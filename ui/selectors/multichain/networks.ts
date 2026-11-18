@@ -27,6 +27,7 @@ import {
 import { createSelector } from 'reselect';
 import {
   MULTICHAIN_PROVIDER_CONFIGS,
+  MultichainNetworks,
   type MultichainProviderConfig,
 } from '../../../shared/constants/multichain/networks';
 import {
@@ -118,6 +119,9 @@ const getIsNonEvmNetworksEnabled = createSelector(
     isStellarEnabled,
     internalAccounts,
   ) => {
+    const cardanoEnabled = internalAccounts.some(({ scopes }) =>
+      scopes?.includes(MultichainNetworks.CardanoPreview),
+    );
     if (
       isBitcoinEnabled &&
       isSolanaEnabled &&
@@ -129,6 +133,7 @@ const getIsNonEvmNetworksEnabled = createSelector(
         solanaEnabled: true,
         tronEnabled: true,
         stellarEnabled: true,
+        cardanoEnabled,
       };
     }
 
@@ -162,7 +167,13 @@ const getIsNonEvmNetworksEnabled = createSelector(
       }
     }
 
-    return { bitcoinEnabled, solanaEnabled, tronEnabled, stellarEnabled };
+    return {
+      bitcoinEnabled,
+      solanaEnabled,
+      tronEnabled,
+      stellarEnabled,
+      cardanoEnabled,
+    };
   },
 );
 
@@ -188,8 +199,23 @@ export const getNonEvmMultichainNetworkConfigurationsByChainId =
 
       // This is not ideal but since there are only a few non-EVM networks
       // we can just filter them out based on the support enabled
-      const { bitcoinEnabled, solanaEnabled, tronEnabled, stellarEnabled } =
-        isNonEvmNetworksEnabled;
+      const {
+        bitcoinEnabled,
+        solanaEnabled,
+        tronEnabled,
+        stellarEnabled,
+        cardanoEnabled,
+      } = isNonEvmNetworksEnabled;
+
+      const cardanoPreview =
+        multichainNetworkConfigurationsByChainId?.[
+          MultichainNetworks.CardanoPreview
+        ];
+      if (cardanoEnabled && cardanoPreview) {
+        filteredNonEvmNetworkConfigurationsByChainId[
+          MultichainNetworks.CardanoPreview
+        ] = cardanoPreview;
+      }
 
       if (
         bitcoinEnabled &&

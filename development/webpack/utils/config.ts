@@ -133,6 +133,10 @@ export function getVariables(
     },
   });
 
+  if (args.manifestVersion !== 3) {
+    variables.set('METAMASK_CARDANO_SNAP_ID', null);
+  }
+
   // variables that are used in the webpack build's entry points. Our runtime
   // code checks for the _string_ `"true"`, so we cast to string here.
   variables.set('ENABLE_SENTRY', args.sentry.toString());

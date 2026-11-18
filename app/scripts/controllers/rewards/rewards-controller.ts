@@ -1,5 +1,6 @@
 import { BaseController } from '@metamask/base-controller';
 import log from 'loglevel';
+import { CardanoAccountType } from '@metamask/keyring-api';
 import type { InternalAccount } from '@metamask/keyring-internal-api';
 import { isAddress as isSolanaAddress } from '@solana/addresses';
 import {
@@ -1087,6 +1088,10 @@ export class RewardsController extends BaseController<
   convertInternalAccountToCaipAccountId(
     account: InternalAccount,
   ): CaipAccountId | null {
+    if (account.type === CardanoAccountType.Base) {
+      return null;
+    }
+
     try {
       const [scope] = account.scopes;
       const { namespace, reference } = parseCaipChainId(scope);

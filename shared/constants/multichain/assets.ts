@@ -8,6 +8,7 @@ export const MULTICHAIN_NATIVE_CURRENCY_TO_CAIP19 = {
   SOL: `${MultichainNetworks.SOLANA}/slip44:501`,
   TRX: `${MultichainNetworks.TRON}/slip44:195`,
   XLM: `${MultichainNetworks.STELLAR}/slip44:148`,
+  tADA: `${MultichainNetworks.CardanoPreview}/slip44:1815`,
 } as const;
 
 export enum MultichainNativeAssets {
@@ -34,6 +35,7 @@ export enum MultichainNativeAssets {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   TRON_SHASTA = `${MultichainNetworks.TRON_SHASTA}/slip44:195`,
   STELLAR = `${MultichainNetworks.STELLAR}/slip44:148`,
+  CardanoPreview = `${MultichainNetworks.CardanoPreview}/slip44:1815`,
 }
 
 /**
@@ -56,6 +58,7 @@ export const MULTICHAIN_NETWORK_TO_ASSET_TYPES: Record<
   [MultichainNetworks.TRON_NILE]: [MultichainNativeAssets.TRON_NILE],
   [MultichainNetworks.TRON_SHASTA]: [MultichainNativeAssets.TRON_SHASTA],
   [MultichainNetworks.STELLAR]: [MultichainNativeAssets.STELLAR],
+  [MultichainNetworks.CardanoPreview]: [MultichainNativeAssets.CardanoPreview],
 } as const;
 
 /**

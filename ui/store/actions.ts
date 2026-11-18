@@ -2256,6 +2256,10 @@ export function removeSnap(
   };
 }
 
+export async function addCardanoAccount(): Promise<void> {
+  await submitRequestToBackground('addCardanoAccount', []);
+}
+
 export async function handleSnapRequest<
   Params extends JsonRpcParams = JsonRpcParams,
 >(args: {

@@ -3,7 +3,11 @@ import {
   type AccountGroupId,
   type AccountWalletId,
 } from '@metamask/account-api';
-import { isEvmAccountType, EthAccountType } from '@metamask/keyring-api';
+import {
+  isEvmAccountType,
+  EthAccountType,
+  CardanoAccountType,
+} from '@metamask/keyring-api';
 import { AccountId } from '@metamask/accounts-controller';
 import { createSelector } from 'reselect';
 import {
@@ -30,6 +34,7 @@ import {
   getOrderedConnectedAccountsForActiveTab,
   getPinnedAccountsList,
   getHiddenAccountsList,
+  getShowTestNetworksPreference,
 } from '../selectors';
 import { getPreferences } from '../../../shared/lib/selectors/preferences';
 import { MergedInternalAccount } from '../selectors.types';
@@ -696,6 +701,7 @@ export const getInternalAccountListSpreadByScopesByGroupId =
     [
       getInternalAccountsFromGroupById,
       getMultichainNetworkConfigurationsByChainId,
+      getShowTestNetworksPreference,
     ],
     (
       internalAccounts: InternalAccount[],
@@ -703,6 +709,7 @@ export const getInternalAccountListSpreadByScopesByGroupId =
         Record<CaipChainId, MultichainNetworkConfiguration>,
         Record<Hex, NetworkConfiguration>,
       ],
+      showTestNetworks: boolean,
     ): {
       account: InternalAccount;
       scope: CaipChainId;
@@ -733,9 +740,10 @@ export const getInternalAccountListSpreadByScopesByGroupId =
             ? [...evmNetworkIds]
             : account.scopes || [];
 
-        // Iterate over scopes and filter out test networks
+        const showCardanoTestNetworks =
+          showTestNetworks && account.type === CardanoAccountType.Base;
         scopes.forEach((scope) => {
-          if (!isTestNetwork(scope)) {
+          if (!isTestNetwork(scope) || showCardanoTestNetworks) {
             result.push({
               account,
               scope,
@@ -827,7 +835,10 @@ export const getDefaultScopeAndAddressByAccountGroupId =
       let defaultAddress: string | null = null;
       const defaultScopes: CaipChainId[] = [];
       for (const x of spreadList) {
-        if (!String(x.scope).startsWith(defaultScope)) {
+        if (
+          x.scope !== defaultScope &&
+          !x.scope.startsWith(`${defaultScope}:`)
+        ) {
           continue;
         }
         if (defaultAddress === null) {

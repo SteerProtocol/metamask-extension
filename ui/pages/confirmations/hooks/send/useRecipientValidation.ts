@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CardanoScope, isCardanoPaymentAddress } from '@metamask/keyring-api';
 
 import {
   isSolanaAddress,
@@ -29,6 +30,7 @@ export const useRecipientValidation = () => {
   const { asset, chainId, to } = useSendContext();
   const {
     isBitcoinSendType,
+    isCardanoSendType,
     isEvmSendType,
     isSolanaSendType,
     isStellarSendType,
@@ -64,6 +66,12 @@ export const useRecipientValidation = () => {
         return validateBtcAddress(toAddress);
       }
 
+      if (isCardanoSendType) {
+        return isCardanoPaymentAddress(toAddress, CardanoScope.Preview)
+          ? {}
+          : { error: 'invalidAddress' };
+      }
+
       if (isTronSendType && isTronAddress(toAddress)) {
         return validateTronAddress(toAddress);
       }
@@ -84,6 +92,7 @@ export const useRecipientValidation = () => {
       asset,
       chainId,
       isBitcoinSendType,
+      isCardanoSendType,
       isEvmSendType,
       isSolanaSendType,
       isStellarSendType,

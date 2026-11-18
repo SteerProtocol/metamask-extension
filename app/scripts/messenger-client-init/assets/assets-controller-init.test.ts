@@ -133,6 +133,44 @@ describe('AssetsControllerInit', () => {
     expect(messengerClient).toBeDefined();
   });
 
+  it('registers the Preview native asset without dropping saved metadata', () => {
+    const env = jest.replaceProperty(process, 'env', {
+      ...process.env,
+      METAMASK_CARDANO_SNAP_ID: 'local:http://localhost:8080',
+    });
+    const request = getInitRequestMock();
+    const nativeEth = {
+      type: 'native',
+      symbol: 'ETH',
+      name: 'Ether',
+      decimals: 18,
+    } as const;
+    request.persistedState.AssetsController = {
+      assetsInfo: { 'eip155:1/slip44:60': nativeEth },
+    };
+
+    try {
+      AssetsControllerInit(request);
+    } finally {
+      env.restore();
+    }
+
+    expect(AssetsController).toHaveBeenCalledWith(
+      expect.objectContaining({
+        state: expect.objectContaining({
+          assetsInfo: expect.objectContaining({
+            'eip155:1/slip44:60': nativeEth,
+            'cip34:0-2/slip44:1815': expect.objectContaining({
+              type: 'native',
+              symbol: 'tADA',
+              decimals: 6,
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
   it('creates AssetsController with correct parameters', () => {
     const requestMock = getInitRequestMock();
     AssetsControllerInit(requestMock);

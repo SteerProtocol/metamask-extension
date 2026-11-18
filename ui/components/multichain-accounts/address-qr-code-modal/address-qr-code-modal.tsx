@@ -43,7 +43,7 @@ import { openBlockExplorer } from '../../multichain/menu-items/view-explorer-men
 import { getBlockExplorerInfo } from '../../../helpers/utils/multichain/getBlockExplorerInfo';
 
 // Constants for QR code generation
-const QR_CODE_TYPE_NUMBER = 4;
+const QR_CODE_AUTO_VERSION = 0;
 const QR_CODE_CELL_SIZE = 5;
 const QR_CODE_MARGIN = 16;
 const QR_CODE_ERROR_CORRECTION_LEVEL = 'M';
@@ -102,14 +102,10 @@ export const AddressQRCodeModal = ({
 
   // Generate QR code data URL
   const qrImageUrl = useMemo(() => {
-    const qr = qrCode(QR_CODE_TYPE_NUMBER, QR_CODE_ERROR_CORRECTION_LEVEL);
+    const qr = qrCode(QR_CODE_AUTO_VERSION, QR_CODE_ERROR_CORRECTION_LEVEL);
     qr.addData(address);
     qr.make();
-
-    // Get the HTML img tag and extract the data URL
-    const imgTag = qr.createImgTag(QR_CODE_CELL_SIZE, QR_CODE_MARGIN);
-    const srcMatch = imgTag.match(/src="([^"]+)"/u);
-    return srcMatch ? srcMatch[1] : null;
+    return qr.createDataURL(QR_CODE_CELL_SIZE, QR_CODE_MARGIN);
   }, [address]);
 
   // Handle copy address
@@ -176,14 +172,12 @@ export const AddressQRCodeModal = ({
               justifyContent={BoxJustifyContent.Center}
               alignItems={BoxAlignItems.Center}
             >
-              {qrImageUrl && (
-                <img
-                  src={qrImageUrl}
-                  alt={`QR code: ${address}`}
-                  // Background and border must remain white regardless of theme
-                  className="bg-white border-4 border-white rounded-2xl"
-                />
-              )}
+              <img
+                src={qrImageUrl}
+                alt={`QR code: ${address}`}
+                // Background and border must remain white regardless of theme
+                className="bg-white border-4 border-white rounded-2xl"
+              />
 
               <Box
                 // Background and border must remain white regardless of theme

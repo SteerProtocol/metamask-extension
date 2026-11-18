@@ -15,9 +15,8 @@ import {
   getInternalAccountListSpreadByScopesByGroupId,
   getAllAccountGroups,
 } from '../../../selectors/multichain-accounts/account-tree';
-import { getNetworksByScopes } from '../../../../shared/lib/selectors/networks';
+import { getAllNetworkConfigurationsByCaipChainId } from '../../../../shared/lib/selectors/networks';
 import { selectBalanceForAllWallets } from '../../../selectors/assets';
-import { enLocale as messages } from '../../../../test/lib/i18n-helpers';
 import { MultichainTriggeredAddressRowsList } from './multichain-triggered-address-rows-list';
 
 jest.mock('../../../hooks/useAnalytics', () => {
@@ -50,7 +49,7 @@ jest.mock('../../../selectors/multichain-accounts/account-tree', () => ({
 
 jest.mock('../../../../shared/lib/selectors/networks', () => ({
   ...jest.requireActual('../../../../shared/lib/selectors/networks'),
-  getNetworksByScopes: jest.fn(),
+  getAllNetworkConfigurationsByCaipChainId: jest.fn(),
 }));
 
 jest.mock('../../../selectors/assets', () => ({
@@ -358,9 +357,6 @@ const mockedGetInternalAccountListSpreadByScopesByGroupId =
   getInternalAccountListSpreadByScopesByGroupId as jest.MockedFunction<
     typeof getInternalAccountListSpreadByScopesByGroupId
   >;
-const mockedGetNetworksByScopes = getNetworksByScopes as jest.MockedFunction<
-  typeof getNetworksByScopes
->;
 const mockedGetAllAccountGroups = getAllAccountGroups as jest.MockedFunction<
   typeof getAllAccountGroups
 >;
@@ -387,39 +383,14 @@ describe('MultichainTriggeredAddressRowsList', () => {
       createMockBalance(WALLET_ID_MOCK, GROUP_ID_MOCK, 100.5, 'USD') as never,
     );
 
-    mockedGetNetworksByScopes.mockImplementation((_, scopes) => {
-      const networkMap: Record<string, { name: string; chainId: string }> = {
-        'bip122:000000000019d6689c085ae165831e93': {
-          name: messages.networkNameBitcoin.message,
-          chainId: 'bip122:000000000019d6689c085ae165831e93',
-        },
-        'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp': {
-          name: messages.networkNameSolana.message,
-          chainId: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
-        },
-        'tron:0x2b6653dc': {
-          name: messages.networkNameTron.message,
-          chainId: 'tron:0x2b6653dc',
-        },
-        'eip155:1': {
-          name: messages.networkNameEthereum.message,
-          chainId: 'eip155:1',
-        },
-        'eip155:137': {
-          name: messages.networkNamePolygon.message,
-          chainId: 'eip155:137',
-        },
-        'eip155:42161': { name: 'Arbitrum', chainId: 'eip155:42161' },
-        'eip155:59144': {
-          name: messages.lineaMainnet.message,
-          chainId: 'eip155:59144',
-        },
-      };
-
-      return (scopes as string[])
-        .map((scope) => networkMap[scope])
-        .filter(Boolean);
-    });
+    jest
+      .mocked(getAllNetworkConfigurationsByCaipChainId)
+      .mockReturnValue(
+        createMockState().metamask
+          .multichainNetworkConfigurationsByChainId as ReturnType<
+          typeof getAllNetworkConfigurationsByCaipChainId
+        >,
+      );
 
     mockedGetInternalAccountListSpreadByScopesByGroupId.mockReturnValue([
       {

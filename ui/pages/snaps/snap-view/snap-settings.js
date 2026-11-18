@@ -69,7 +69,9 @@ function SnapSettings({ snapId, initRemove, resetInitRemove }) {
     (state) => snap && getPermissions(state, snap.id),
   );
 
-  const isKeyringSnap = Boolean(permissions?.snap_manageAccounts);
+  const isKeyringSnap = Boolean(
+    permissions?.snap_manageAccounts || permissions?.['endowment:keyring'],
+  );
   const keyringAccounts = useKeyringSnap(snapId, isKeyringSnap);
 
   const { name: snapName, description } = useSelector((state) =>

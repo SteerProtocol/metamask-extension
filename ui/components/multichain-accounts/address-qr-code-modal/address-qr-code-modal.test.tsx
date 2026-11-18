@@ -1,5 +1,6 @@
 import React from 'react';
 import { fireEvent, screen } from '@testing-library/react';
+import { CardanoScope } from '@metamask/keyring-api';
 import { renderWithProvider } from '../../../../test/lib/render-helpers-navigate';
 import { enLocale as messages } from '../../../../test/lib/i18n-helpers';
 import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
@@ -72,6 +73,29 @@ describe('AddressQRCodeModal', () => {
         'Use this address to receive tokens and collectibles on Ethereum',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('renders a QR code and copies a full Cardano base address', () => {
+    const address =
+      'addr_test1qzvsqutjxa89ksp6sphm95vxwn4rutxw38vr463rgvm2wk336h0f687s8vnsu0djxpzktpg6meggg54m5ca3jqrmup2s6gwz07';
+    const copy = jest.fn();
+    mockUseCopyToClipboard.mockReturnValue([false, copy, jest.fn()]);
+    renderWithProvider(
+      <AddressQRCodeModal
+        isOpen={true}
+        onClose={jest.fn()}
+        address={address}
+        accountName="Test Account"
+        networkName="Cardano Preview"
+        chainId={CardanoScope.Preview}
+      />,
+    );
+
+    expect(
+      screen.getByAltText(`QR code: ${address}`).getAttribute('src'),
+    ).toMatch(/^data:image\/gif;base64,/u);
+    fireEvent.click(screen.getByTestId('address-qr-code-modal-copy-button'));
+    expect(copy).toHaveBeenCalledWith(address);
   });
 
   it('should not render the modal when isOpen is false', () => {

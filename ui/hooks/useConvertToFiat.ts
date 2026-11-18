@@ -1,13 +1,12 @@
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { isNonEvmChainId } from '@metamask/bridge-controller';
 import {
   type CaipChainId,
   type Hex,
   isCaipAssetType,
   parseCaipAssetType,
 } from '@metamask/utils';
-import { isNativeCaipAssetId } from '#shared/lib/asset-utils';
+import { isEvmChainId, isNativeCaipAssetId } from '#shared/lib/asset-utils';
 import {
   calculateFiatFromMarketRates,
   getHumanReadableTokenAmount,
@@ -69,7 +68,7 @@ function shouldShowFiatForChain(
     return true;
   }
 
-  if (!isNonEvmChainId(chainId)) {
+  if (isEvmChainId(chainId)) {
     return getMultichainShouldShowFiat(state, undefined, chainId);
   }
 

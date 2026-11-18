@@ -7,7 +7,11 @@ import {
   MessengerActions,
   MessengerEvents,
 } from '@metamask/messenger';
-import { EthAccountType } from '@metamask/keyring-api';
+import {
+  CardanoAccountType,
+  CardanoScope,
+  EthAccountType,
+} from '@metamask/keyring-api';
 import type { InternalAccount } from '@metamask/keyring-internal-api';
 import { CaipAccountId } from '@metamask/utils';
 import { SnapControllerHandleRequestAction } from '@metamask/snaps-controllers';
@@ -514,6 +518,19 @@ describe('RewardsController', () => {
   });
 
   describe('convertInternalAccountToCaipAccountId', () => {
+    it('skips Cardano accounts in Rewards', async () => {
+      await withController({ isDisabled: false }, ({ controller }) => {
+        const cardano = {
+          ...MOCK_INTERNAL_ACCOUNT,
+          type: CardanoAccountType.Base,
+          scopes: [CardanoScope.Preview],
+        };
+        expect(
+          controller.convertInternalAccountToCaipAccountId(cardano),
+        ).toBeNull();
+      });
+    });
+
     it('should convert internal account to CAIP account ID', async () => {
       await withController({ isDisabled: false }, ({ controller }) => {
         const result = controller.convertInternalAccountToCaipAccountId(
