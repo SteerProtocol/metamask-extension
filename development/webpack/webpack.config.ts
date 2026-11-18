@@ -243,6 +243,14 @@ const plugins: WebpackPluginInstance[] = [
               to: 'images',
               force: true,
             },
+            ...(MANIFEST_VERSION === 3
+              ? [
+                  {
+                    from: join(context, 'scripts/cardano-preview-provider.js'),
+                    to: 'scripts/cardano-preview-provider.js',
+                  },
+                ]
+              : []),
           ]
         : []),
       ...(args.type === 'beta'

@@ -2,6 +2,11 @@ import EventEmitter from 'events';
 import { finished, pipeline } from 'readable-stream';
 import browser from 'webextension-polyfill';
 import {
+  CARDANO_PREVIEW_LIFECYCLE_EVENTS,
+  CARDANO_PREVIEW_SNAP_ID,
+  createCardanoPreviewDiscovery,
+} from './cardano-preview-discovery';
+import {
   createAsyncMiddleware,
   createScaffoldMiddleware,
   JsonRpcEngine,
@@ -1549,6 +1554,37 @@ export default class MetamaskController extends EventEmitter {
 
     this.setupControllerEventSubscriptions();
 
+    if (
+      isManifestV3 &&
+      process.env.METAMASK_BUILD_APP_ID === 'io.metamask.flask' &&
+      this.extension.scripting
+    ) {
+      this.isCardanoPreviewAvailable = () =>
+        this.controllerMessenger
+          .call('SnapController:getRunnableSnaps')
+          .some(({ id }) => id === CARDANO_PREVIEW_SNAP_ID);
+      const reconcile = createCardanoPreviewDiscovery({
+        scripting: this.extension.scripting,
+        isAvailable: this.isCardanoPreviewAvailable,
+      });
+      this.syncCardanoPreviewDiscovery = () =>
+        reconcile().catch((error) => {
+          log.error('Could not synchronize Cardano Preview discovery', error);
+        });
+      for (const event of CARDANO_PREVIEW_LIFECYCLE_EVENTS) {
+        this.controllerMessenger.subscribe(
+          `SnapController:${event}`,
+          (snap) => {
+            const id = typeof snap === 'string' ? snap : snap?.id;
+            if (id === CARDANO_PREVIEW_SNAP_ID) {
+              this.syncCardanoPreviewDiscovery();
+            }
+          },
+        );
+      }
+      this.syncCardanoPreviewDiscovery();
+    }
+
     // For more information about these legacy streams, see here:
     // https://github.com/MetaMask/metamask-extension/issues/15491
     // TODO:LegacyProvider: Delete
@@ -2285,6 +2321,9 @@ export default class MetamaskController extends EventEmitter {
        */
       isUnlocked: true,
       accounts: this.getPermittedAccounts(origin),
+      ...(this.isCardanoPreviewAvailable && {
+        cardanoPreviewAvailable: this.isCardanoPreviewAvailable(),
+      }),
       ...metadata,
       ...providerNetworkState,
     };
@@ -4238,6 +4277,20 @@ export default class MetamaskController extends EventEmitter {
 
     // Append origin to each request
     engine.push(createOriginMiddleware({ origin }));
+
+    if (this.syncCardanoPreviewDiscovery) {
+      engine.push(
+        createAsyncMiddleware(async (req, res, next) => {
+          await next();
+          if (
+            req.method === 'wallet_requestSnaps' &&
+            Object.hasOwn(res.result ?? {}, CARDANO_PREVIEW_SNAP_ID)
+          ) {
+            await this.syncCardanoPreviewDiscovery();
+          }
+        }),
+      );
+    }
 
     // Append mainFrameOrigin to each request if present
     if (mainFrameOrigin) {
