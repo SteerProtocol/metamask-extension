@@ -155,6 +155,26 @@ describe('getDefaultConnectChainIds', () => {
     ]);
   });
 
+  it('keeps the selected Cardano Preview network out of EIP-1193 approvals', () => {
+    const cardanoPreview = {
+      ...sepolia,
+      caipChainId: MultichainNetworks.CardanoPreview,
+    };
+
+    expect(
+      getDefaultConnectChainIds({
+        ...baseParams,
+        testNetworkConfigurations: [sepolia, cardanoPreview],
+        globallySelectedNetworkChainId: cardanoPreview.caipChainId,
+        isEip1193Request: true,
+      }),
+    ).toEqual([
+      ethMainnet.caipChainId,
+      polygon.caipChainId,
+      solana.caipChainId,
+    ]);
+  });
+
   it('filters out unsupported requested chain IDs', () => {
     const result = getDefaultConnectChainIds({
       ...baseParams,

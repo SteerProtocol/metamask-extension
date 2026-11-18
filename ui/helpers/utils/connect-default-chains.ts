@@ -4,6 +4,7 @@ import {
   KnownCaipNamespace,
   parseCaipChainId,
 } from '@metamask/utils';
+import { CardanoScope } from '@metamask/keyring-api';
 import { EvmAndMultichainNetworkConfigurationsWithCaipChainId } from '../../selectors/selectors.types';
 
 export type GetDefaultConnectChainIdsParams = {
@@ -50,15 +51,19 @@ export function getDefaultConnectChainIds({
   isSolanaWalletStandardRequest,
   isTronWalletAdapterRequest,
 }: GetDefaultConnectChainIdsParams): CaipChainId[] {
+  // Cardano Preview dapp permissions are handled by CIP-30.
+  const caip25TestNetworks = testNetworkConfigurations.filter(
+    ({ caipChainId }) => caipChainId !== CardanoScope.Preview,
+  );
   const allNetworksList = new Set(
-    [...nonTestNetworkConfigurations, ...testNetworkConfigurations].map(
+    [...nonTestNetworkConfigurations, ...caip25TestNetworks].map(
       ({ caipChainId }) => caipChainId,
     ),
   );
 
   // If globally selected network is a test network, include that in the default
   // selected networks for connection request
-  const globallySelectedTestNetwork = testNetworkConfigurations.find(
+  const globallySelectedTestNetwork = caip25TestNetworks.find(
     (network) => network.caipChainId === globallySelectedNetworkChainId,
   );
 
